@@ -153,7 +153,7 @@ public class CustomerSignupForm extends JFrame {
 
             stmt.executeUpdate();
             JOptionPane.showMessageDialog(this, "Customer registered successfully!");
-            new CustomerLoginForm().setVisible(true);
+            new CustomerLogin().setVisible(true);
             dispose();
         } catch (SQLIntegrityConstraintViolationException e) {
             JOptionPane.showMessageDialog(this, "Phone number already exists.");

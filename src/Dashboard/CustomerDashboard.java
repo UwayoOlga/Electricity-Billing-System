@@ -5,151 +5,195 @@ import db.DBConnection;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
+import java.awt.event.*;
 import java.sql.*;
-import java.util.Vector;
+import java.time.LocalDate;
 
 public class CustomerDashboard extends JFrame {
 
-    private final int customerId;  // Passed after login
-    private final Color purple = new Color(128, 0, 128);
-    private JTable meterTable, billTable;
-    private JLabel welcomeLabel;
+    private int customerId;
+    private JTable meterTable;
+    private DefaultTableModel meterTableModel;
 
-    public CustomerDashboard(int customerId, String firstName, String lastName) {
+    private JTextField meterNumberField;
+    private JComboBox<String> meterTypeCombo;
+    private JButton addMeterBtn;
+
+    private JTable billsTable;
+    private DefaultTableModel billsTableModel;
+
+    public CustomerDashboard(int customerId) {
         this.customerId = customerId;
-        setTitle("Customer Dashboard");
+
+        setTitle("Customer Dashboard - Electricity Billing");
         setSize(900, 600);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
+        // Purple theme panel
         JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(Color.WHITE);
+        mainPanel.setBackground(new Color(128, 0, 128)); // purple background
+        add(mainPanel, BorderLayout.CENTER);
 
-        welcomeLabel = new JLabel("Welcome, " + firstName + " " + lastName);
-        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        welcomeLabel.setForeground(purple);
-        welcomeLabel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+        // Title
+        JLabel titleLabel = new JLabel("Welcome to Your Dashboard");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(15, 10, 15, 10));
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
 
-        mainPanel.add(welcomeLabel, BorderLayout.NORTH);
+        // Meters Panel
+        JPanel metersPanel = new JPanel(new BorderLayout());
+        metersPanel.setOpaque(false);
 
-        // Tabs for meters and bills
-        JTabbedPane tabbedPane = new JTabbedPane();
+        meterTableModel = new DefaultTableModel(new String[]{"Meter ID", "Meter Number", "Type", "Status"}, 0) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        meterTable = new JTable(meterTableModel);
+        JScrollPane meterScroll = new JScrollPane(meterTable);
+        metersPanel.add(meterScroll, BorderLayout.CENTER);
 
-        tabbedPane.addTab("My Meters", createMeterPanel());
-        tabbedPane.addTab("My Bills", createBillPanel());
+        // Add meter input form
+        JPanel addMeterPanel = new JPanel();
+        addMeterPanel.setOpaque(false);
+        addMeterPanel.setLayout(new FlowLayout());
 
-        mainPanel.add(tabbedPane, BorderLayout.CENTER);
+        meterNumberField = new JTextField(10);
+        meterTypeCombo = new JComboBox<>(new String[]{"Residential", "Commercial", "Industrial"});
+        addMeterBtn = new JButton("Add Meter");
+        addMeterBtn.setBackground(new Color(128, 0, 128));
+        addMeterBtn.setForeground(Color.WHITE);
+        addMeterBtn.addActionListener(e -> addMeter());
 
-        // Logout + Report buttons
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.setBackground(Color.WHITE);
+        addMeterPanel.add(new JLabel("Meter Number:"));
+        addMeterPanel.add(meterNumberField);
+        addMeterPanel.add(new JLabel("Type:"));
+        addMeterPanel.add(meterTypeCombo);
+        addMeterPanel.add(addMeterBtn);
 
-        JButton logoutBtn = new JButton("Logout");
-        logoutBtn.setBackground(purple);
-        logoutBtn.setForeground(Color.WHITE);
-        logoutBtn.addActionListener(e -> logout());
+        metersPanel.add(addMeterPanel, BorderLayout.SOUTH);
 
-        JButton reportBtn = new JButton("Generate Report");
-        reportBtn.setBackground(purple);
-        reportBtn.setForeground(Color.WHITE);
-        reportBtn.addActionListener(this::generateReport);
+        mainPanel.add(metersPanel, BorderLayout.WEST);
+        metersPanel.setPreferredSize(new Dimension(450, 0));
 
-        bottomPanel.add(reportBtn);
-        bottomPanel.add(logoutBtn);
+        // Bills panel
+        JPanel billsPanel = new JPanel(new BorderLayout());
+        billsPanel.setOpaque(false);
 
-        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
-        add(mainPanel);
+        billsTableModel = new DefaultTableModel(new String[]{"Bill ID", "Meter Number", "Usage (kWh)", "Amount ($)", "Date"}, 0) {
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        billsTable = new JTable(billsTableModel);
+        JScrollPane billsScroll = new JScrollPane(billsTable);
+        billsPanel.add(billsScroll, BorderLayout.CENTER);
+
+        mainPanel.add(billsPanel, BorderLayout.CENTER);
+
+        // Load data from DB
+        loadMeters();
+        loadBills();
 
         setVisible(true);
-        loadMeters();
-    }
-
-    private JPanel createMeterPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        meterTable = new JTable();
-        JScrollPane scrollPane = new JScrollPane(meterTable);
-        panel.add(scrollPane, BorderLayout.CENTER);
-        return panel;
-    }
-
-    private JPanel createBillPanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        billTable = new JTable();
-        JScrollPane scrollPane = new JScrollPane(billTable);
-        panel.add(scrollPane, BorderLayout.CENTER);
-        return panel;
     }
 
     private void loadMeters() {
-        try (Connection conn = DBConnection.connect()) {
-            PreparedStatement stmt = conn.prepareStatement("SELECT id AS Meter_ID, meter_number AS Meter_Number FROM meters WHERE customer_id = ?");
+        meterTableModel.setRowCount(0);
+        String sql = "SELECT id, meter_number, meter_type, status FROM meters WHERE customer_id = ?";
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
             ResultSet rs = stmt.executeQuery();
-            meterTable.setModel(buildTableModel(rs));
-
-            rs.beforeFirst();
-            Vector<Integer> meterIds = new Vector<>();
             while (rs.next()) {
-                meterIds.add(rs.getInt("Meter_ID"));
+                meterTableModel.addRow(new Object[]{
+                        rs.getInt("id"),
+                        rs.getString("meter_number"),
+                        rs.getString("meter_type"),
+                        rs.getString("status")
+                });
             }
-            loadBills(conn, meterIds);
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading meters: " + e.getMessage());
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error loading meters: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
-    private void loadBills(Connection conn, Vector<Integer> meterIds) throws SQLException {
-        if (meterIds.isEmpty()) return;
-
-        StringBuilder query = new StringBuilder("SELECT b.id AS Bill_ID, m.meter_number AS Meter, b.month, b.amount_due, b.status, b.due_date FROM bills b JOIN meters m ON b.meter_id = m.id WHERE m.id IN (");
-        for (int i = 0; i < meterIds.size(); i++) {
-            query.append("?");
-            if (i < meterIds.size() - 1) query.append(",");
-        }
-        query.append(")");
-
-        PreparedStatement stmt = conn.prepareStatement(query.toString());
-        for (int i = 0; i < meterIds.size(); i++) {
-            stmt.setInt(i + 1, meterIds.get(i));
-        }
-
-        ResultSet rs = stmt.executeQuery();
-        billTable.setModel(buildTableModel(rs));
-    }
-
-    private void generateReport(ActionEvent e) {
-        JOptionPane.showMessageDialog(this, "Report generation coming soon!");
-        // Optional: Export meter + bill data to CSV/PDF
-    }
-
-    private void logout() {
-        dispose();
-        new auth.CustomerLoginForm().setVisible(true);
-    }
-
-    private DefaultTableModel buildTableModel(ResultSet rs) throws SQLException {
-        ResultSetMetaData meta = rs.getMetaData();
-        int colCount = meta.getColumnCount();
-
-        Vector<String> columnNames = new Vector<>();
-        for (int i = 1; i <= colCount; i++) {
-            columnNames.add(meta.getColumnName(i));
-        }
-
-        Vector<Vector<Object>> data = new Vector<>();
-        while (rs.next()) {
-            Vector<Object> row = new Vector<>();
-            for (int i = 1; i <= colCount; i++) {
-                row.add(rs.getObject(i));
+    private void loadBills() {
+        billsTableModel.setRowCount(0);
+        String sql = "SELECT b.id, m.meter_number, b.unit, b.amount, b.bill_date " +
+                "FROM bills b JOIN meters m ON b.meter_id = m.id WHERE m.customer_id = ?";
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, customerId);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                billsTableModel.addRow(new Object[]{
+                        rs.getInt("id"),
+                        rs.getString("meter_number"),
+                        rs.getDouble("unit"),
+                        rs.getDouble("amount"),
+                        rs.getDate("bill_date").toLocalDate()
+                });
             }
-            data.add(row);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error loading bills: " + ex.getMessage());
+            ex.printStackTrace();
         }
-        return new DefaultTableModel(data, columnNames);
     }
 
-    public static void main(String[] args) {
-        // For demo purposes
-        SwingUtilities.invokeLater(() -> new CustomerDashboard(1, "John", "Doe"));
+    private void addMeter() {
+        String meterNumber = meterNumberField.getText().trim();
+        String meterType = (String) meterTypeCombo.getSelectedItem();
+
+        if (meterNumber.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a meter number.");
+            return;
+        }
+
+        String sql = "INSERT INTO meters (customer_id, meter_number, meter_type, status) VALUES (?, ?, ?, 'Active')";
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, customerId);
+            stmt.setString(2, meterNumber);
+            stmt.setString(3, meterType);
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "Meter added successfully!");
+                meterNumberField.setText("");
+                loadMeters();
+                loadBills();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add meter.");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error adding meter: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
+
+
+    private void calculateAndAddBill(int meterId, double usage) {
+        double ratePerKwh = 0.15; // Example rate
+        double amount = usage * ratePerKwh;
+
+        String sql = "INSERT INTO bills (meter_id, units, amount, billing_date) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, meterId);
+            stmt.setDouble(2, usage);
+            stmt.setDouble(3, amount);
+            stmt.setDate(4, Date.valueOf(LocalDate.now()));
+            stmt.executeUpdate();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error adding bill: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+
 }

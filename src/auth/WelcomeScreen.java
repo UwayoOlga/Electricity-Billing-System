@@ -39,7 +39,7 @@ public class WelcomeScreen extends JFrame {
             if (selectedRole.equals("Admin")) {
                 new AdminLoginForm().setVisible(true);  // Admin login form
             } else if (selectedRole.equals("User")) {
-                new CustomerLoginForm().setVisible(true);  // User login form
+                new CustomerLogin().setVisible(true);  // User login form
             } else {
                 JOptionPane.showMessageDialog(this, "Please select a valid role.");
                 return;
