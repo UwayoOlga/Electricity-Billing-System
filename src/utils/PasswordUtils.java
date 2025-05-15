@@ -1,20 +1,17 @@
 package utils;
 
-import java.security.MessageDigest;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class PasswordUtils {
 
-    public static String encrypt(String password) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] bytes = md.digest(password.getBytes());
-            StringBuilder sb = new StringBuilder();
-            for (byte b : bytes) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (Exception e) {
-            return null;
+     public static String encrypt(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt());
+    }
+
+     public static boolean check(String providedPassword, String storedHash) {
+        if (storedHash == null) {
+            return false;
         }
+        return BCrypt.checkpw(providedPassword, storedHash);
     }
 }
