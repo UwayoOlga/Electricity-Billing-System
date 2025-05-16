@@ -19,42 +19,49 @@ public class CustomerLogin extends JFrame {
 
     public CustomerLogin() {
         setTitle("Customer Login - Electricity Billing");
-        setSize(400, 320);
+        setSize(600, 420);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        JPanel panel = new JPanel();
+        // Create a panel with background image
+        ImagePanel panel = new ImagePanel("src/assets/login (2).png"); // Replace with your image path
         panel.setLayout(null);
-        panel.setBackground(Color.WHITE);
 
-        JLabel title = new JLabel("Customer Login");
+        JLabel title = new JLabel("Welcome Back!");
         title.setFont(new Font("Arial", Font.BOLD, 22));
+        title.setForeground(Color.WHITE); // Changed to white for better visibility on background
         title.setBounds(120, 20, 200, 30);
         panel.add(title);
 
         JLabel firstNameLabel = new JLabel("First Name:");
+        firstNameLabel.setForeground(Color.WHITE);
         firstNameLabel.setBounds(50, 70, 100, 25);
         panel.add(firstNameLabel);
 
         firstNameField = new JTextField();
         firstNameField.setBounds(150, 70, 180, 25);
+        firstNameField.setOpaque(false); // Make text field transparent
         panel.add(firstNameField);
 
         JLabel lastNameLabel = new JLabel("Last Name:");
+        lastNameLabel.setForeground(Color.WHITE);
         lastNameLabel.setBounds(50, 110, 100, 25);
         panel.add(lastNameLabel);
 
         lastNameField = new JTextField();
         lastNameField.setBounds(150, 110, 180, 25);
+        lastNameField.setOpaque(false);
         panel.add(lastNameField);
 
         JLabel passLabel = new JLabel("Password:");
+        passLabel.setForeground(Color.WHITE);
         passLabel.setBounds(50, 150, 100, 25);
         panel.add(passLabel);
 
         passwordField = new JPasswordField();
         passwordField.setBounds(150, 150, 180, 25);
+        passwordField.setOpaque(false);
         panel.add(passwordField);
 
         JButton loginBtn = new JButton("Login");
@@ -62,11 +69,39 @@ public class CustomerLogin extends JFrame {
         loginBtn.setBackground(new Color(128, 0, 128));
         loginBtn.setForeground(Color.WHITE);
         loginBtn.addActionListener(this::handleLogin);
-
         panel.add(loginBtn);
-        add(panel, BorderLayout.CENTER);
 
+        // Add back button
+        JButton backBtn = new JButton("Back");
+        backBtn.setBounds(20, 20, 80, 25);
+        backBtn.setBackground(new Color(128, 0, 128));
+        backBtn.setForeground(Color.WHITE);
+        backBtn.addActionListener(e -> {
+            this.dispose();
+            new WelcomeScreen(); // Assuming WelcomeScreen.java exists
+        });
+        panel.add(backBtn);
+
+        add(panel, BorderLayout.CENTER);
         setVisible(true);
+    }
+
+    // ImagePanel inner class for background
+    class ImagePanel extends JPanel {
+        private Image image;
+
+        public ImagePanel(String imagePath) {
+            // Replace with your image loading code
+            this.image = new ImageIcon(imagePath).getImage();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (image != null) {
+                g.drawImage(image, 0, 0, getWidth(), getHeight(), this);
+            }
+        }
     }
 
     private void handleLogin(ActionEvent e) {
@@ -80,7 +115,6 @@ public class CustomerLogin extends JFrame {
         }
 
         try (Connection conn = DBConnection.connect()) {
-            // Step 1: Query user by first name and last name only
             String sql = "SELECT id, password FROM customers WHERE first_name = ? AND last_name = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, firstName);
@@ -91,7 +125,7 @@ public class CustomerLogin extends JFrame {
                 String storedHash = rs.getString("password");
                 int customerId = rs.getInt("id");
 
-                 if (PasswordUtils.check(password, storedHash)) {
+                if (PasswordUtils.check(password, storedHash)) {
                     dispose();
                     new CustomerDashboard(customerId);
                 } else {
@@ -105,7 +139,6 @@ public class CustomerLogin extends JFrame {
             JOptionPane.showMessageDialog(this, "Login failed: " + ex.getMessage());
         }
     }
-
 
     public static void main(String[] args) {
         new CustomerLogin();
