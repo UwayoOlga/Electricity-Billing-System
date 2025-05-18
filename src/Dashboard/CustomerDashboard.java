@@ -20,7 +20,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.itextpdf.text.FontFactory.*;
+import static com.itextpdf.text.FontFactory.HELVETICA;
+import static com.itextpdf.text.FontFactory.HELVETICA_BOLD;
 import static java.awt.Color.white;
 
 public class CustomerDashboard extends JFrame {
@@ -29,23 +30,17 @@ public class CustomerDashboard extends JFrame {
     private double totalAmountDue = 0.0;
     private LocalDate dueDate;
     private String paymentStatus = "Unpaid";
+    private JComboBox<String> meterCombo;
+    private static final double UNIT_RATE = 100.0;
 
-    // Account summary fields
     private JTextField txtFirstName, txtLastName, txtDistrict, txtSector, txtPhone;
     private JButton btnEdit, btnSave;
-
-    // Tables and models
     private JTable metersTable, billsTable, usageTable, alertsTable;
     private DefaultTableModel metersModel, billsModel, usageModel, alertsModel;
     private JLabel lblCurrentBillAmount, lblDueDate, lblPaymentStatus;
-
-    // Search fields
     private JTextField searchMetersField, searchBillsField;
-
-    // Table row sorters
     private TableRowSorter<DefaultTableModel> metersSorter, billsSorter;
 
-    // Inner class to represent a bill
     private class Bill {
         int meterId;
         String meterNumber;
@@ -66,49 +61,32 @@ public class CustomerDashboard extends JFrame {
 
     public CustomerDashboard(int customerId) {
         this.customerId = customerId;
-
         setTitle("Customer Dashboard - Electricity Billing");
         setSize(900, 650);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Purple theme
         Color purple = new Color(128, 0, 128);
         Color lightPurple = new Color(230, 204, 255);
         Color white = Color.WHITE;
         getContentPane().setBackground(white);
 
-        // Main layout with tabs
         JTabbedPane tabbedPane = new JTabbedPane();
-
-        // Account Summary Tab
         JPanel accountPanel = createAccountSummaryPanel(purple, white);
         tabbedPane.addTab("Account Summary", accountPanel);
-
-        // Meters Tab
         JPanel metersPanel = createMetersPanel(purple, white, lightPurple);
         tabbedPane.addTab("Meters", metersPanel);
-
-        // Billing Tab
         JPanel billingPanel = createBillingPanel(purple, white, lightPurple);
         tabbedPane.addTab("Billing Overview", billingPanel);
-
-        // Payments Tab
         JPanel paymentsPanel = createPaymentsPanel(purple, white, lightPurple);
         tabbedPane.addTab("Payments", paymentsPanel);
-
-        // Usage Tab
         JPanel usagePanel = createUsagePanel(white, lightPurple);
         tabbedPane.addTab("Usage History", usagePanel);
-
-        // Alerts Tab
         JPanel alertsPanel = createAlertsPanel(white, lightPurple);
         tabbedPane.addTab("Alerts", alertsPanel);
 
-        // Add logout button to the top right
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(white);
-
         JButton logoutButton = new JButton("Logout");
         logoutButton.setBackground(purple);
         logoutButton.setForeground(white);
@@ -122,10 +100,8 @@ public class CustomerDashboard extends JFrame {
         logoutPanel.add(logoutButton);
         headerPanel.add(logoutPanel, BorderLayout.EAST);
         headerPanel.add(tabbedPane, BorderLayout.CENTER);
-
         add(headerPanel);
 
-        // Apply custom tab styling
         for (int i = 0; i < tabbedPane.getTabCount(); i++) {
             JLabel tabLabel = new JLabel(tabbedPane.getTitleAt(i));
             tabLabel.setOpaque(true);
@@ -136,13 +112,11 @@ public class CustomerDashboard extends JFrame {
             tabbedPane.setTabComponentAt(i, tabLabel);
         }
 
-        // Load data
         loadAccountSummary();
         loadMeters();
         loadBills();
         loadUsage();
         loadAlerts();
-
         setVisible(true);
     }
 
@@ -153,7 +127,6 @@ public class CustomerDashboard extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Heading
         JLabel heading = new JLabel("Account Details");
         heading.setFont(new Font("Arial", Font.BOLD, 20));
         heading.setForeground(purple);
@@ -162,7 +135,6 @@ public class CustomerDashboard extends JFrame {
         panel.add(heading, gbc);
         gbc.gridwidth = 1;
 
-        // Labels and fields
         Font labelFont = new Font("Arial", Font.BOLD, 16);
         String[] labels = {"First Name:", "Last Name:", "District:", "Sector:", "Phone:"};
         JTextField[] fields = new JTextField[5];
@@ -186,7 +158,6 @@ public class CustomerDashboard extends JFrame {
             row++;
         }
 
-        // Edit and Save buttons
         btnEdit = new JButton("Edit");
         btnEdit.setBackground(purple); btnEdit.setForeground(white);
         btnSave = new JButton("Save");
@@ -208,7 +179,6 @@ public class CustomerDashboard extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(bg);
 
-        // Search panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchPanel.setBackground(bg);
         searchPanel.add(new JLabel("Search:"));
@@ -224,7 +194,6 @@ public class CustomerDashboard extends JFrame {
         metersModel = new DefaultTableModel(new String[]{"Meter Number", "Type", "Location", "Status"}, 0);
         metersTable = new JTable(metersModel);
 
-        // Style the table
         metersTable.setBackground(tableBg);
         metersTable.setSelectionBackground(purple);
         metersTable.setSelectionForeground(white);
@@ -237,17 +206,18 @@ public class CustomerDashboard extends JFrame {
 
         metersSorter = new TableRowSorter<>(metersModel);
         metersTable.setRowSorter(metersSorter);
-
         panel.add(new JScrollPane(metersTable), BorderLayout.CENTER);
 
         JPanel btnPanel = new JPanel(); btnPanel.setBackground(bg);
         JButton btnAdd = new JButton("Add Meter"); btnAdd.setBackground(purple); btnAdd.setForeground(white);
         JButton btnDel = new JButton("Delete Selected Meter"); btnDel.setBackground(purple); btnDel.setForeground(white);
         JButton btnReport = new JButton("Generate Report"); btnReport.setBackground(purple); btnReport.setForeground(white);
+        JButton btnPref = new JButton("Calculate Bill"); btnPref.setBackground(purple); btnPref.setForeground(white);
         btnAdd.addActionListener(e -> showAddMeterDialog());
         btnDel.addActionListener(e -> deleteSelectedMeter());
         btnReport.addActionListener(e -> generateMonthlyReport());
-        btnPanel.add(btnAdd); btnPanel.add(btnDel); btnPanel.add(btnReport);
+        btnPref.addActionListener(e -> markAsPreferred());
+        btnPanel.add(btnAdd); btnPanel.add(btnDel); btnPanel.add(btnReport); btnPanel.add(btnPref);
         panel.add(btnPanel, BorderLayout.SOUTH);
         return panel;
     }
@@ -256,16 +226,14 @@ public class CustomerDashboard extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(bg);
 
-        // Current bill summary
         JPanel top = new JPanel(new GridLayout(1, 3, 15, 15)); top.setBackground(bg);
         Font f = new Font("Arial", Font.BOLD, 16);
-        lblCurrentBillAmount = new JLabel("Current Bill: $0.00"); lblCurrentBillAmount.setFont(f);
+        lblCurrentBillAmount = new JLabel("Current Bill: RWF0.00"); lblCurrentBillAmount.setFont(f);
         lblDueDate = new JLabel("Due Date: N/A"); lblDueDate.setFont(f);
         lblPaymentStatus = new JLabel("Payment Status: N/A"); lblPaymentStatus.setFont(f);
         top.add(lblCurrentBillAmount); top.add(lblDueDate); top.add(lblPaymentStatus);
         panel.add(top, BorderLayout.NORTH);
 
-        // Search panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         searchPanel.setBackground(bg);
         searchPanel.add(new JLabel("Search:"));
@@ -283,7 +251,6 @@ public class CustomerDashboard extends JFrame {
         };
         billsTable = new JTable(billsModel);
 
-        // Style the table
         billsTable.setBackground(tableBg);
         billsTable.setSelectionBackground(purple);
         billsTable.setSelectionForeground(white);
@@ -296,10 +263,8 @@ public class CustomerDashboard extends JFrame {
 
         billsSorter = new TableRowSorter<>(billsModel);
         billsTable.setRowSorter(billsSorter);
-
         panel.add(new JScrollPane(billsTable), BorderLayout.CENTER);
 
-        // Button to enter units
         JButton btnUnits = new JButton("Enter Units");
         btnUnits.setBackground(purple); btnUnits.setForeground(white);
         btnUnits.addActionListener(e -> showUnitsDialog());
@@ -315,12 +280,10 @@ public class CustomerDashboard extends JFrame {
         panel.setBackground(bg);
         panel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Main content panel with BoxLayout
         JPanel contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
         contentPanel.setBackground(bg);
 
-        // Title label
         JLabel titleLabel = new JLabel("Make a Payment");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setForeground(purple);
@@ -328,7 +291,6 @@ public class CustomerDashboard extends JFrame {
         titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         contentPanel.add(titleLabel);
 
-        // Form panel with GridBagLayout for better control
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBackground(bg);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -336,22 +298,20 @@ public class CustomerDashboard extends JFrame {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Meter selection
         JLabel meterLabel = new JLabel("Select Meter:");
         meterLabel.setFont(new Font("Arial", Font.BOLD, 14));
         meterLabel.setForeground(purple);
         gbc.gridx = 0; gbc.gridy = 0;
         formPanel.add(meterLabel, gbc);
 
-        JComboBox<String> meterCombo = new JComboBox<>();
+        meterCombo = new JComboBox<>();
         meterCombo.setPreferredSize(new Dimension(200, 30));
         meterCombo.setBackground(lightPurple);
         meterCombo.setFont(new Font("Arial", Font.PLAIN, 14));
-        updateMeterComboBox(meterCombo);
+        updatePaymentMeterDropdown();
         gbc.gridx = 1; gbc.gridy = 0;
         formPanel.add(meterCombo, gbc);
 
-        // Amount due
         JLabel amountLabel = new JLabel("Amount Due:");
         amountLabel.setFont(new Font("Arial", Font.BOLD, 14));
         amountLabel.setForeground(purple);
@@ -366,7 +326,6 @@ public class CustomerDashboard extends JFrame {
         gbc.gridx = 1; gbc.gridy = 1;
         formPanel.add(amountField, gbc);
 
-        // Payment method
         JLabel methodLabel = new JLabel("Payment Method:");
         methodLabel.setFont(new Font("Arial", Font.BOLD, 14));
         methodLabel.setForeground(purple);
@@ -380,9 +339,22 @@ public class CustomerDashboard extends JFrame {
         gbc.gridx = 1; gbc.gridy = 2;
         formPanel.add(methodCombo, gbc);
 
+        JLabel totalLabel = new JLabel("Total to Pay:");
+        totalLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        totalLabel.setForeground(purple);
+        gbc.gridx = 0; gbc.gridy = 3;
+        formPanel.add(totalLabel, gbc);
+
+        JTextField totalField = new JTextField();
+        totalField.setEditable(false);
+        totalField.setPreferredSize(new Dimension(200, 30));
+        totalField.setFont(new Font("Arial", Font.BOLD, 14));
+        totalField.setBackground(lightPurple);
+        gbc.gridx = 1; gbc.gridy = 3;
+        formPanel.add(totalField, gbc);
+
         contentPanel.add(formPanel);
 
-        // Pay button panel
         JPanel buttonPanel = new JPanel();
         buttonPanel.setBackground(bg);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
@@ -394,23 +366,23 @@ public class CustomerDashboard extends JFrame {
         payBtn.setPreferredSize(new Dimension(200, 40));
         payBtn.setBorder(BorderFactory.createEmptyBorder(5, 20, 5, 20));
 
-        // Update amount field when meter selection changes
         meterCombo.addActionListener(e -> {
             String selectedMeter = (String) meterCombo.getSelectedItem();
-            if (selectedMeter != null) {
+            if (selectedMeter != null && !selectedMeter.equals("No unpaid meters found")) {
                 Bill latestBill = getLatestBillForMeter(selectedMeter);
                 if (latestBill != null) {
-                    amountField.setText(String.format("$%.2f", latestBill.amount));
+                    amountField.setText(String.format("RWF%.2f", latestBill.amount));
+                    totalField.setText(String.format("RWF%.2f", latestBill.amount));
                 } else {
                     amountField.setText("No bill found");
+                    totalField.setText("RWF0.00");
                 }
             }
         });
 
-        // Handle payment
         payBtn.addActionListener(e -> {
             String selectedMeter = (String) meterCombo.getSelectedItem();
-            if (selectedMeter != null) {
+            if (selectedMeter != null && !selectedMeter.equals("No unpaid meters found")) {
                 Bill latestBill = getLatestBillForMeter(selectedMeter);
                 if (latestBill != null) {
                     String method = (String) methodCombo.getSelectedItem();
@@ -429,7 +401,6 @@ public class CustomerDashboard extends JFrame {
 
         buttonPanel.add(payBtn);
         contentPanel.add(buttonPanel);
-
         panel.add(contentPanel, BorderLayout.CENTER);
         return panel;
     }
@@ -439,7 +410,6 @@ public class CustomerDashboard extends JFrame {
         usageModel = new DefaultTableModel(new String[]{"Date", "Units Used"}, 0);
         usageTable = new JTable(usageModel);
 
-        // Style the table
         usageTable.setBackground(tableBg);
         usageTable.setSelectionBackground(new Color(128, 0, 128));
         usageTable.setSelectionForeground(white);
@@ -459,7 +429,6 @@ public class CustomerDashboard extends JFrame {
         alertsModel = new DefaultTableModel(new String[]{"Alert Type", "Message", "Date"}, 0);
         alertsTable = new JTable(alertsModel);
 
-        // Style the table
         alertsTable.setBackground(tableBg);
         alertsTable.setSelectionBackground(new Color(128, 0, 128));
         alertsTable.setSelectionForeground(white);
@@ -506,14 +475,12 @@ public class CustomerDashboard extends JFrame {
                 PdfWriter.getInstance(document, new FileOutputStream(fileToSave));
                 document.open();
 
-                // Add title
                 com.itextpdf.text.Font titleFont = FontFactory.getFont(HELVETICA_BOLD, 18, BaseColor.BLACK);
                 Paragraph title = new Paragraph("Monthly Electricity Usage Report", titleFont);
                 title.setAlignment(Element.ALIGN_CENTER);
                 title.setSpacingAfter(20);
                 document.add(title);
 
-                // Add customer info
                 com.itextpdf.text.Font infoFont = FontFactory.getFont(HELVETICA, 12, BaseColor.BLACK);
                 Paragraph customerInfo = new Paragraph();
                 customerInfo.add(new Phrase("Customer Name: " + txtFirstName.getText() + " " +
@@ -526,11 +493,9 @@ public class CustomerDashboard extends JFrame {
                         "\n\n", infoFont));
                 document.add(customerInfo);
 
-                // Add meters table
                 PdfPTable metersPdfTable = new PdfPTable(metersModel.getColumnCount());
                 metersPdfTable.setWidthPercentage(100);
 
-                // Add headers
                 for (int i = 0; i < metersModel.getColumnCount(); i++) {
                     PdfPCell cell = new PdfPCell(new Phrase(metersModel.getColumnName(i)));
                     cell.setBackgroundColor(new BaseColor(128, 0, 128));
@@ -540,7 +505,6 @@ public class CustomerDashboard extends JFrame {
                     metersPdfTable.addCell(cell);
                 }
 
-                // Add data
                 com.itextpdf.text.Font tableFont = FontFactory.getFont(HELVETICA, 12, BaseColor.BLACK);
                 for (int i = 0; i < metersModel.getRowCount(); i++) {
                     for (int j = 0; j < metersModel.getColumnCount(); j++) {
@@ -555,11 +519,9 @@ public class CustomerDashboard extends JFrame {
                 document.add(metersPdfTable);
                 document.add(Chunk.NEWLINE);
 
-                // Add bills table
                 PdfPTable billsPdfTable = new PdfPTable(billsModel.getColumnCount());
                 billsPdfTable.setWidthPercentage(100);
 
-                // Add headers
                 for (int i = 0; i < billsModel.getColumnCount(); i++) {
                     PdfPCell cell = new PdfPCell(new Phrase(billsModel.getColumnName(i)));
                     cell.setBackgroundColor(new BaseColor(128, 0, 128));
@@ -569,7 +531,6 @@ public class CustomerDashboard extends JFrame {
                     billsPdfTable.addCell(cell);
                 }
 
-                // Add data
                 for (int i = 0; i < billsModel.getRowCount(); i++) {
                     for (int j = 0; j < billsModel.getColumnCount(); j++) {
                         PdfPCell cell = new PdfPCell(new Phrase(
@@ -583,10 +544,9 @@ public class CustomerDashboard extends JFrame {
                 document.add(billsPdfTable);
                 document.add(Chunk.NEWLINE);
 
-                // Add summary
                 Paragraph summary = new Paragraph();
                 summary.add(new Phrase("Total Amount Due: " +
-                        String.format("$%.2f", totalAmountDue) + "\n", infoFont));
+                        String.format("RWF%.2f", totalAmountDue) + "\n", infoFont));
                 summary.add(new Phrase("Due Date: " +
                         dueDate.format(DateTimeFormatter.ofPattern("MMMM dd, yyyy")) + "\n", infoFont));
                 summary.add(new Phrase("Payment Status: " + paymentStatus + "\n", infoFont));
@@ -655,18 +615,21 @@ public class CustomerDashboard extends JFrame {
 
     private void loadMeters() {
         metersModel.setRowCount(0);
-        String sql = "SELECT meter_number, meter_type, location, status FROM meters WHERE customer_id = ?";
+        String sql = "SELECT meter_number, meter_type, location, status, is_preferred FROM meters WHERE customer_id = ?";
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
+                boolean isPreferred = rs.getBoolean("is_preferred");
+                String prefStatus = isPreferred ? "★ Preferred" : "";
+
                 metersModel.addRow(new Object[]{
                         rs.getString("meter_number"),
                         rs.getString("meter_type"),
                         rs.getString("location"),
-                        rs.getString("status")
+                        rs.getString("status") + " " + prefStatus
                 });
             }
         } catch (SQLException e) {
@@ -674,49 +637,114 @@ public class CustomerDashboard extends JFrame {
         }
     }
 
+    private void markAsPreferred() {
+        int row = metersTable.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Please select a meter first.");
+            return;
+        }
+
+        String meterNo = (String) metersModel.getValueAt(row, 0);
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Mark meter " + meterNo + " as preferred?\n(Only preferred meters will be billed)",
+                "Calculate bill",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try (Connection conn = DBConnection.connect();
+                 PreparedStatement stmt = conn.prepareStatement(
+                         "UPDATE meters SET is_preferred = NOT is_preferred WHERE meter_number = ?")) {
+
+                stmt.setString(1, meterNo);
+                stmt.executeUpdate();
+                loadMeters();
+                JOptionPane.showMessageDialog(this,
+                        "Meter preference updated successfully.");
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error updating meter preference: " + e.getMessage(),
+                        "Database Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
     private void showAddMeterDialog() {
         JComboBox<String> typeBox = new JComboBox<>(new String[]{"Commercial", "Residence"});
-        JTextField locationField = new JTextField();
+        JComboBox<String> locationBox = new JComboBox<>(new String[]{"Gasabo", "Kicukiro", "Nyarugenge"});
         JComboBox<String> statusBox = new JComboBox<>(new String[]{"Active", "Inactive"});
         JTextField meterNumberField = new JTextField();
 
         JPanel panel = new JPanel(new GridLayout(0, 1));
         panel.add(new JLabel("Meter Type:")); panel.add(typeBox);
-        panel.add(new JLabel("Location:")); panel.add(locationField);
+        panel.add(new JLabel("Location:")); panel.add(locationBox);
         panel.add(new JLabel("Status:")); panel.add(statusBox);
         panel.add(new JLabel("Meter Number:")); panel.add(meterNumberField);
 
         int result = JOptionPane.showConfirmDialog(this, panel, "Add New Meter", JOptionPane.OK_CANCEL_OPTION);
         if (result == JOptionPane.OK_OPTION) {
             try (Connection conn = DBConnection.connect();
-                 PreparedStatement stmt = conn.prepareStatement("INSERT INTO meters (customer_id, meter_type, location, status, meter_number) VALUES (?, ?, ?, ?, ?)")) {
+                 PreparedStatement stmt = conn.prepareStatement(
+                         "INSERT INTO meters (customer_id, meter_type, location, status, meter_number) VALUES (?, ?, ?, ?, ?)")) {
                 stmt.setInt(1, customerId);
                 stmt.setString(2, (String) typeBox.getSelectedItem());
-                stmt.setString(3, locationField.getText());
+                stmt.setString(3, (String) locationBox.getSelectedItem());
                 stmt.setString(4, (String) statusBox.getSelectedItem());
                 stmt.setString(5, meterNumberField.getText());
                 stmt.executeUpdate();
                 loadMeters();
+                if (meterCombo != null) {
+                    updateMeterComboBox(meterCombo);
+                }
+                JOptionPane.showMessageDialog(this, "Meter added successfully!");
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(this, "Error adding meter: " + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Error adding meter: " + e.getMessage());
+                JOptionPane.showMessageDialog(this, "Unexpected error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     private void deleteSelectedMeter() {
         int row = metersTable.getSelectedRow();
-        if (row < 0) { JOptionPane.showMessageDialog(this, "Select a meter to delete."); return;}
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Select a meter to delete.");
+            return;
+        }
+
         String meterNo = (String) metersModel.getValueAt(row, 0);
-        int confirm = JOptionPane.showConfirmDialog(this, "Delete meter " + meterNo + "?", "Confirm", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Delete meter " + meterNo + " and all its bills?",
+                "Confirm", JOptionPane.YES_NO_OPTION);
+
         if (confirm == JOptionPane.YES_OPTION) {
-            try (Connection conn = DBConnection.connect();
-                 PreparedStatement stmt = conn.prepareStatement("DELETE FROM meters WHERE meter_number=? AND customer_id=?")) {
-                stmt.setString(1, meterNo);
-                stmt.setInt(2, customerId);
-                stmt.executeUpdate();
-                loadMeters();
+            try (Connection conn = DBConnection.connect()) {
+                conn.setAutoCommit(false);
+                try {
+                    PreparedStatement deleteBillsStmt = conn.prepareStatement(
+                            "DELETE FROM bills WHERE meter_id = (SELECT id FROM meters WHERE meter_number = ?)");
+                    deleteBillsStmt.setString(1, meterNo);
+                    int billsDeleted = deleteBillsStmt.executeUpdate();
+
+                    PreparedStatement deleteMeterStmt = conn.prepareStatement(
+                            "DELETE FROM meters WHERE meter_number = ? AND customer_id = ?");
+                    deleteMeterStmt.setString(1, meterNo);
+                    deleteMeterStmt.setInt(2, customerId);
+                    int metersDeleted = deleteMeterStmt.executeUpdate();
+
+                    conn.commit();
+                    JOptionPane.showMessageDialog(this,
+                            "Deleted " + metersDeleted + " meter and " + billsDeleted + " associated bills");
+                    loadMeters();
+                    loadBills();
+                } catch (SQLException e) {
+                    conn.rollback();
+                    JOptionPane.showMessageDialog(this,
+                            "Error deleting meter: " + e.getMessage());
+                }
             } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Error deleting meter: " + e.getMessage());
+                JOptionPane.showMessageDialog(this,
+                        "Database error: " + e.getMessage());
             }
         }
     }
@@ -727,9 +755,10 @@ public class CustomerDashboard extends JFrame {
         totalAmountDue = 0.0;
 
         String sql = "SELECT m.id as meter_id, m.meter_number, b.bill_date, b.unit, b.amount, " +
-                "CASE WHEN b.payment_status IS NULL THEN 'Unpaid' ELSE b.payment_status END as payment_status " +
-                "FROM meters m LEFT JOIN bills b ON m.id=b.meter_id AND b.bill_date=(SELECT MAX(b2.bill_date) FROM bills b2 WHERE b2.meter_id=m.id) " +
-                "WHERE m.customer_id=? ORDER BY m.meter_number";
+                "CASE WHEN b.payment_status IS NULL OR b.payment_status = 'Unpaid' THEN 'Unpaid' ELSE 'Paid' END as payment_status " +
+                "FROM meters m LEFT JOIN bills b ON m.id=b.meter_id " +
+                "WHERE m.customer_id=? AND (b.payment_status IS NULL OR b.payment_status = 'Unpaid') " +
+                "ORDER BY m.meter_number";
 
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -745,50 +774,88 @@ public class CustomerDashboard extends JFrame {
                 double amount = rs.getDouble("amount");
                 String status = rs.getString("payment_status");
 
-                if (billDate != null) {  // Only add if there's actually a bill
+                if (billDate != null) {
                     Bill bill = new Bill(meterId, meterNumber, billDate, units, amount, status);
                     customerBills.add(bill);
-                    totalAmountDue += amount;
+                    if ("Unpaid".equals(status)) {
+                        totalAmountDue += amount;
+                    }
 
                     billsModel.addRow(new Object[]{
                             meterNumber,
                             billDate,
                             units,
-                            String.format("$%.2f", amount),
+                            String.format("%,.0f RWF", amount),
                             status
                     });
                 }
             }
 
-            // Calculate due date (15 days from now)
             dueDate = LocalDate.now().plusDays(15);
-
-            // Update the summary labels
             updateBillingSummary();
+            if (meterCombo != null) {
+                updatePaymentMeterDropdown();
+            }
 
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error loading bills: " + e.getMessage());
         }
     }
 
+    private void updatePaymentMeterDropdown() {
+        meterCombo.removeAllItems();
+        try (Connection conn = DBConnection.connect();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT DISTINCT m.meter_number " +
+                             "FROM meters m JOIN bills b ON m.id = b.meter_id " +
+                             "WHERE m.customer_id = ? AND m.status = 'Active' " +
+                             "AND (b.payment_status IS NULL OR b.payment_status = 'Unpaid')")) {
+
+            stmt.setInt(1, customerId);
+            ResultSet rs = stmt.executeQuery();
+
+            boolean hasUnpaidMeters = false;
+            while (rs.next()) {
+                meterCombo.addItem(rs.getString("meter_number"));
+                hasUnpaidMeters = true;
+            }
+
+            if (!hasUnpaidMeters) {
+                meterCombo.addItem("No unpaid meters found");
+                meterCombo.setEnabled(false);
+            } else {
+                meterCombo.setEnabled(true);
+            }
+        } catch (SQLException e) {
+            meterCombo.addItem("Error loading meters");
+            meterCombo.setEnabled(false);
+        }
+    }
+
     private void updateBillingSummary() {
-        lblCurrentBillAmount.setText(String.format("Current Bill: $%.2f", totalAmountDue));
+        lblCurrentBillAmount.setText(String.format("Current Bill: %,.0f RWF", totalAmountDue));
         lblDueDate.setText("Due Date: " + dueDate.format(DateTimeFormatter.ofPattern("MMM dd, yyyy")));
+        paymentStatus = (totalAmountDue > 0) ? "Unpaid" : "Paid";
         lblPaymentStatus.setText("Payment Status: " + paymentStatus);
     }
 
     private void showUnitsDialog() {
         try (Connection conn = DBConnection.connect();
-             PreparedStatement stmt = conn.prepareStatement("SELECT id, meter_number FROM meters WHERE customer_id=?")) {
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT id, meter_number FROM meters WHERE customer_id=? AND status='Active' AND is_preferred=TRUE")) {
+
             stmt.setInt(1, customerId);
             ResultSet rs = stmt.executeQuery();
 
             List<Integer> meterIds = new ArrayList<>();
             List<JTextField> unitFields = new ArrayList<>();
             JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10));
-            panel.add(new JLabel("Meter Number")); panel.add(new JLabel("Units Used"));
+            panel.add(new JLabel("Meter Number"));
+            panel.add(new JLabel("Units Used"));
 
+            boolean hasPreferredMeters = false;
             while (rs.next()) {
+                hasPreferredMeters = true;
                 int mId = rs.getInt("id");
                 meterIds.add(mId);
                 panel.add(new JLabel(rs.getString("meter_number")));
@@ -797,31 +864,47 @@ public class CustomerDashboard extends JFrame {
                 panel.add(unitsField);
             }
 
-            int result = JOptionPane.showConfirmDialog(this, panel, "Enter Units for Billing", JOptionPane.OK_CANCEL_OPTION);
-            if (result == JOptionPane.OK_OPTION) {
-                // insert bills
-                String insertSql = "INSERT INTO bills (meter_id, bill_date, unit, amount, payment_status) VALUES (?, ?, ?, ?, 'Unpaid')";
-                PreparedStatement insStmt = conn.prepareStatement(insertSql);
-                for (int i = 0; i < meterIds.size(); i++) {
-                    int mId = meterIds.get(i);
-                    double units = Double.parseDouble(unitFields.get(i).getText());
-                    double rate = 0.15; // per unit rate; adjust as needed
-                    double amt = units * rate;
-                    insStmt.setInt(1, mId);
-                    insStmt.setDate(2, Date.valueOf(LocalDate.now()));
-                    insStmt.setDouble(3, units);
-                    insStmt.setDouble(4, amt);
-                    insStmt.addBatch();
-                }
-                insStmt.executeBatch();
-                JOptionPane.showMessageDialog(this, "Bills generated successfully.");
-
-                // Reload bills to update totals
-                loadBills();
-                loadUsage();
+            if (!hasPreferredMeters) {
+                JOptionPane.showMessageDialog(this,
+                        "No preferred meters found. Please select meters first.",
+                        "No Meters Selected",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
             }
+
+            int result = JOptionPane.showConfirmDialog(
+                    this, panel, "Enter Units for Billing (Selected Meters Only)",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+            if (result == JOptionPane.OK_OPTION) {
+                String insertSql = "INSERT INTO bills (meter_id, bill_date, unit, amount, payment_status) " +
+                        "VALUES (?, ?, ?, ?, 'Unpaid')";
+
+                try (PreparedStatement insStmt = conn.prepareStatement(insertSql)) {
+                    for (int i = 0; i < meterIds.size(); i++) {
+                        int mId = meterIds.get(i);
+                        double units = Double.parseDouble(unitFields.get(i).getText());
+                        double amt = units * UNIT_RATE;
+
+                        insStmt.setInt(1, mId);
+                        insStmt.setDate(2, Date.valueOf(LocalDate.now()));
+                        insStmt.setDouble(3, units);
+                        insStmt.setDouble(4, amt);
+                        insStmt.addBatch();
+                    }
+                    insStmt.executeBatch();
+
+                    JOptionPane.showMessageDialog(this, "Bills generated successfully for preferred meters.");
+                    loadBills();
+                    loadUsage();
+                }
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Please enter valid numbers for units",
+                    "Input Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error entering units: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Error entering units: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -851,7 +934,7 @@ public class CustomerDashboard extends JFrame {
         }
 
         panel.add(detailsField);
-        panel.add(new JLabel("Amount to Pay: $" + String.format("%.2f", amount)));
+        panel.add(new JLabel("Amount to Pay: RWF" + String.format("%.2f", amount)));
 
         int result = JOptionPane.showConfirmDialog(
                 this,
@@ -868,7 +951,6 @@ public class CustomerDashboard extends JFrame {
                 return false;
             }
 
-            // Validate payment details format
             if (paymentMethod.equals("Mobile Money") && !paymentDetails.matches("\\d{10}")) {
                 JOptionPane.showMessageDialog(this, "Please enter a valid 10-digit mobile number");
                 return false;
@@ -901,10 +983,13 @@ public class CustomerDashboard extends JFrame {
 
             paymentStatus = "Paid";
             updateBillingSummary();
-            loadBills(); // Refresh bills table
+            loadBills();
+            String paymentMessage = String.format("Payment of RWF%.2f for meter %s via %s",
+                    bill.amount, bill.meterNumber, method);
+            addAlert("Payment", paymentMessage);
 
             JOptionPane.showMessageDialog(this,
-                    "Payment of " + String.format("$%.2f", bill.amount) +
+                    "Payment of " + String.format("RWF%.2f", bill.amount) +
                             " processed successfully via " + method);
 
         } catch (SQLException ex) {
@@ -912,28 +997,70 @@ public class CustomerDashboard extends JFrame {
         }
     }
 
+    private void addAlert(String type, String message) {
+        alertsModel.addRow(new Object[]{
+                type,
+                message,
+                new Timestamp(System.currentTimeMillis())
+        });
+        alertsTable.scrollRectToVisible(alertsTable.getCellRect(alertsModel.getRowCount()-1, 0, true));
+    }
+
     private void updateMeterComboBox(JComboBox<String> combo) {
         combo.removeAllItems();
-        try (Connection conn = DBConnection.connect();
-             PreparedStatement stmt = conn.prepareStatement(
-                     "SELECT meter_number FROM meters WHERE customer_id=? AND status='Active'")) { // Added status check
+        combo.setEnabled(false);
+        combo.addItem("Loading meters...");
 
-            stmt.setInt(1, customerId);
-            ResultSet rs = stmt.executeQuery();
+        new SwingWorker<List<String>, Void>() {
+            @Override
+            protected List<String> doInBackground() throws Exception {
+                List<String> activeMeters = new ArrayList<>();
+                String sql = "SELECT meter_number FROM meters " +
+                        "WHERE customer_id = ? AND status = 'Active' " +
+                        "ORDER BY meter_number ASC";
 
-            while (rs.next()) {
-                String meterNumber = rs.getString("meter_number");
-                combo.addItem(meterNumber);
-                System.out.println("Added meter to combo: " + meterNumber); // Debug line
+                try (Connection conn = DBConnection.connect();
+                     PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setInt(1, customerId);
+                    ResultSet rs = stmt.executeQuery();
+                    while (rs.next()) {
+                        activeMeters.add(rs.getString("meter_number"));
+                    }
+                } catch (SQLException e) {
+                    throw new Exception("Database error: " + e.getMessage());
+                }
+                return activeMeters;
             }
 
-            if (combo.getItemCount() == 0) {
-                System.out.println("No meters found for customer ID: " + customerId); // Debug line
+            @Override
+            protected void done() {
+                try {
+                    combo.removeAllItems();
+                    List<String> meters = get();
+                    if (meters.isEmpty()) {
+                        combo.addItem("No active meters available");
+                        combo.setEnabled(false);
+                    } else {
+                        for (String meter : meters) {
+                            combo.addItem(meter);
+                        }
+                        combo.setEnabled(true);
+                        if (combo.getSelectedIndex() == -1 && combo.getItemCount() > 0) {
+                            combo.setSelectedIndex(0);
+                        }
+                    }
+                } catch (Exception e) {
+                    combo.removeAllItems();
+                    combo.addItem("Error loading meters");
+                    combo.setToolTipText(e.getMessage());
+                    combo.setEnabled(false);
+                    JOptionPane.showMessageDialog(CustomerDashboard.this,
+                            "Failed to load meters: " + e.getMessage(),
+                            "Database Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error loading meters: " + e.getMessage());
-            e.printStackTrace(); // Added stack trace for debugging
-        }
+        }.execute();
     }
 
     private void loadUsage() {
@@ -957,7 +1084,7 @@ public class CustomerDashboard extends JFrame {
 
     private void loadAlerts() {
         alertsModel.setRowCount(0);
-        alertsModel.addRow(new Object[]{"Info", "Welcome to your dashboard", new Timestamp(System.currentTimeMillis())});
+        alertsModel.addRow(new Object[]{"LogIn", "Welcome to your dashboard", new Timestamp(System.currentTimeMillis())});
         alertsModel.addRow(new Object[]{"Reminder", "Your bill is due soon", new Timestamp(System.currentTimeMillis())});
     }
 

@@ -24,13 +24,13 @@ public class CustomerLogin extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // Create a panel with background image
-        ImagePanel panel = new ImagePanel("src/assets/login (2).png"); // Replace with your image path
+
+        ImagePanel panel = new ImagePanel("src/assets/login (2).png");
         panel.setLayout(null);
 
         JLabel title = new JLabel("Welcome Back!");
         title.setFont(new Font("Arial", Font.BOLD, 22));
-        title.setForeground(Color.WHITE); // Changed to white for better visibility on background
+        title.setForeground(Color.WHITE);
         title.setBounds(120, 20, 200, 30);
         panel.add(title);
 
@@ -41,7 +41,7 @@ public class CustomerLogin extends JFrame {
 
         firstNameField = new JTextField();
         firstNameField.setBounds(150, 70, 180, 25);
-        firstNameField.setOpaque(false); // Make text field transparent
+        firstNameField.setOpaque(false);
         panel.add(firstNameField);
 
         JLabel lastNameLabel = new JLabel("Last Name:");
@@ -71,14 +71,13 @@ public class CustomerLogin extends JFrame {
         loginBtn.addActionListener(this::handleLogin);
         panel.add(loginBtn);
 
-        // Add back button
         JButton backBtn = new JButton("Back");
         backBtn.setBounds(20, 20, 80, 25);
         backBtn.setBackground(new Color(128, 0, 128));
         backBtn.setForeground(Color.WHITE);
         backBtn.addActionListener(e -> {
             this.dispose();
-            new WelcomeScreen(); // Assuming WelcomeScreen.java exists
+            new WelcomeScreen();
         });
         panel.add(backBtn);
 
@@ -86,12 +85,11 @@ public class CustomerLogin extends JFrame {
         setVisible(true);
     }
 
-    // ImagePanel inner class for background
     class ImagePanel extends JPanel {
         private Image image;
 
         public ImagePanel(String imagePath) {
-            // Replace with your image loading code
+
             this.image = new ImageIcon(imagePath).getImage();
         }
 

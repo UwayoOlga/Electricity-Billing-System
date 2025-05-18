@@ -6,6 +6,7 @@ import Dashboard.AdminDashboard;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.sql.*;
 
 public class AdminLoginForm extends JFrame {
@@ -13,94 +14,88 @@ public class AdminLoginForm extends JFrame {
     private JPasswordField passwordField;
 
     public AdminLoginForm() {
-        setTitle("Admin Login");
-        setSize(400, 300);
+        setTitle("Admin Login - Electricity Billing");
+        setSize(600, 420);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        setLayout(new BorderLayout());
 
-        Color purple = new Color(128, 0, 128);
-        Font labelFont = new Font("Arial", Font.BOLD, 14);
-        Font fieldFont = new Font("Arial", Font.PLAIN, 13);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(Color.WHITE);
+        ImagePanel panel = new ImagePanel("src/assets/login (2).png");
+        panel.setLayout(null);
 
-        JButton backBtn = new JButton("←");
-        backBtn.setBackground(purple);
+        JLabel title = new JLabel("Welcome Back!");
+        title.setFont(new Font("Arial", Font.BOLD, 22));
+        title.setForeground(Color.WHITE);
+        title.setBounds(120, 20, 200, 30);
+        panel.add(title);
+
+        JLabel usernameLabel = new JLabel("Username:");
+        usernameLabel.setForeground(Color.WHITE);
+        usernameLabel.setBounds(50, 70, 100, 25);
+        panel.add(usernameLabel);
+
+        usernameField = new JTextField();
+        usernameField.setBounds(150, 70, 180, 25);
+        usernameField.setOpaque(false);
+        panel.add(usernameField);
+
+        JLabel passLabel = new JLabel("Password:");
+        passLabel.setForeground(Color.WHITE);
+        passLabel.setBounds(50, 110, 100, 25);
+        panel.add(passLabel);
+
+        passwordField = new JPasswordField();
+        passwordField.setBounds(150, 110, 180, 25);
+        passwordField.setOpaque(false);
+        panel.add(passwordField);
+
+        JButton loginBtn = new JButton("Login");
+        loginBtn.setBounds(150, 160, 100, 30);
+        loginBtn.setBackground(new Color(128, 0, 128));
+        loginBtn.setForeground(Color.WHITE);
+        loginBtn.addActionListener(this::loginAdmin);
+        panel.add(loginBtn);
+
+
+        JButton backBtn = new JButton("Back");
+        backBtn.setBounds(20, 20, 80, 25);
+        backBtn.setBackground(new Color(128, 0, 128));
         backBtn.setForeground(Color.WHITE);
-        backBtn.setFocusPainted(false);
-        backBtn.setFont(new Font("Arial", Font.BOLD, 18));
-        backBtn.setPreferredSize(new Dimension(45, 45));
-        backBtn.setBorder(BorderFactory.createEmptyBorder());
-        backBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        backBtn.setOpaque(true);
-        backBtn.setBorderPainted(false);
-        backBtn.setContentAreaFilled(true);
-        backBtn.setToolTipText("Back to Welcome");
-
         backBtn.addActionListener(e -> {
             new WelcomeScreen().setVisible(true);
             dispose();
         });
+        panel.add(backBtn);
 
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        topPanel.setBackground(Color.WHITE);
-        topPanel.add(backBtn);
-
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        formPanel.setBackground(Color.WHITE);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JLabel userLabel = new JLabel("Admin Username:");
-        userLabel.setFont(labelFont);
-        userLabel.setForeground(purple);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        formPanel.add(userLabel, gbc);
-
-        usernameField = new JTextField(20);
-        usernameField.setFont(fieldFont);
-        gbc.gridx = 1;
-        formPanel.add(usernameField, gbc);
-
-        JLabel passLabel = new JLabel("Password:");
-        passLabel.setFont(labelFont);
-        passLabel.setForeground(purple);
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        formPanel.add(passLabel, gbc);
-
-        passwordField = new JPasswordField(20);
-        passwordField.setFont(fieldFont);
-        gbc.gridx = 1;
-        formPanel.add(passwordField, gbc);
-
-        JButton loginBtn = new JButton("Log In");
-        loginBtn.setBackground(purple);
-        loginBtn.setForeground(Color.WHITE);
-        loginBtn.setFont(new Font("Arial", Font.BOLD, 16));
-        loginBtn.setFocusPainted(false);
-        loginBtn.setPreferredSize(new Dimension(120, 40));
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.LINE_START;
-        formPanel.add(loginBtn, gbc);
-
-        loginBtn.addActionListener(e -> loginAdmin());
-
-        mainPanel.add(topPanel, BorderLayout.NORTH);
-        mainPanel.add(formPanel, BorderLayout.CENTER);
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(40, 50, 40, 50));
-
-        add(mainPanel);
+        add(panel, BorderLayout.CENTER);
+        setVisible(true);
     }
 
-    private void loginAdmin() {
+    class ImagePanel extends JPanel {
+        private Image image;
+
+        public ImagePanel(String imagePath) {
+            this.image = new ImageIcon(imagePath).getImage();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (image != null) {
+                g.drawImage(image, 0, 0, getWidth(), getHeight(), this);
+            }
+        }
+    }
+
+    private void loginAdmin(ActionEvent e) {
         String username = usernameField.getText().trim();
-        String password = String.valueOf(passwordField.getPassword());
+        String password = new String(passwordField.getPassword());
+
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please fill in all fields.");
+            return;
+        }
 
         try (Connection conn = DBConnection.connect()) {
             PreparedStatement stmt = conn.prepareStatement(
@@ -115,11 +110,13 @@ public class AdminLoginForm extends JFrame {
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid admin credentials.");
             }
-
         } catch (Exception ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage());
         }
     }
 
+    public static void main(String[] args) {
+        new AdminLoginForm();
+    }
 }

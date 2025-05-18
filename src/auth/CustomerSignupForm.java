@@ -9,8 +9,9 @@ import java.sql.*;
 
 public class CustomerSignupForm extends JFrame {
 
-    private JTextField firstNameField, lastNameField, districtField, sectorField, phoneField;
+    private JTextField firstNameField, lastNameField, sectorField, phoneField;
     private JPasswordField passwordField, confirmPasswordField;
+    private JComboBox<String> districtComboBox;
 
     public CustomerSignupForm() {
         setTitle("Customer Sign Up");
@@ -75,9 +76,12 @@ public class CustomerSignupForm extends JFrame {
         districtLabel.setFont(labelFont);
         districtLabel.setForeground(purple);
         districtLabel.setBounds(xLabel, 220, 100, height);
-        districtField = new JTextField();
-        districtField.setFont(fieldFont);
-        districtField.setBounds(xField, 220, width, height);
+
+        // Create a combo box with the allowed districts
+        String[] districts = {"gasabo", "kicukiro", "nyarugenge"};
+        districtComboBox = new JComboBox<>(districts);
+        districtComboBox.setFont(fieldFont);
+        districtComboBox.setBounds(xField, 220, width, height);
 
         JLabel sectorLabel = new JLabel("Sector:");
         sectorLabel.setFont(labelFont);
@@ -107,7 +111,7 @@ public class CustomerSignupForm extends JFrame {
         add(lastNameLabel);      add(lastNameField);
         add(passwordLabel);      add(passwordField);
         add(confirmLabel);       add(confirmPasswordField);
-        add(districtLabel);      add(districtField);
+        add(districtLabel);      add(districtComboBox);
         add(sectorLabel);        add(sectorField);
         add(phoneLabel);         add(phoneField);
         add(signupBtn);
@@ -118,12 +122,12 @@ public class CustomerSignupForm extends JFrame {
         String lastName = lastNameField.getText().trim();
         String password = String.valueOf(passwordField.getPassword());
         String confirmPassword = String.valueOf(confirmPasswordField.getPassword());
-        String district = districtField.getText().trim();
+        String district = (String) districtComboBox.getSelectedItem();
         String sector = sectorField.getText().trim();
         String phone = phoneField.getText().trim();
 
         if (firstName.isEmpty() || lastName.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()
-                || district.isEmpty() || sector.isEmpty() || phone.isEmpty()) {
+                || sector.isEmpty() || phone.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please fill in all fields.");
             return;
         }
