@@ -407,7 +407,9 @@ public class CustomerDashboard extends JFrame {
 
     private JPanel createUsagePanel(Color bg, Color tableBg) {
         JPanel panel = new JPanel(new BorderLayout()); panel.setBackground(bg);
-        usageModel = new DefaultTableModel(new String[]{"Date", "Units Used"}, 0);
+        usageModel = new DefaultTableModel(new String[]{"Date", "Units Used"}, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
         usageTable = new JTable(usageModel);
 
         usageTable.setBackground(tableBg);
@@ -426,8 +428,9 @@ public class CustomerDashboard extends JFrame {
 
     private JPanel createAlertsPanel(Color bg, Color tableBg) {
         JPanel panel = new JPanel(new BorderLayout()); panel.setBackground(bg);
-        alertsModel = new DefaultTableModel(new String[]{"Alert Type", "Message", "Date"}, 0);
-        alertsTable = new JTable(alertsModel);
+        alertsModel = new DefaultTableModel(new String[]{"Alert Type", "Message", "Date"}, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };        alertsTable = new JTable(alertsModel);
 
         alertsTable.setBackground(tableBg);
         alertsTable.setSelectionBackground(new Color(128, 0, 128));
