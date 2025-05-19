@@ -19,18 +19,15 @@ public class LoginScreen extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Create main panel with background image
         ImagePanel panel = new ImagePanel("src/assets/start.png");
         panel.setLayout(null);
 
-        // Add application title
         JLabel titleLabel = new JLabel("Smart Billing. Bright Future.", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.ITALIC, 20));
         titleLabel.setForeground(Color.WHITE);
         titleLabel.setBounds(70, 380, 800, 40);
         panel.add(titleLabel);
 
-        // Welcome button
         welcomeButton = new JButton("GET STARTED");
         welcomeButton.setFont(new Font("Arial", Font.BOLD, 18));
         welcomeButton.setForeground(Color.WHITE);
@@ -50,7 +47,6 @@ public class LoginScreen extends JFrame {
         dispose();
     }
 
-    // Custom panel for background image
     class ImagePanel extends JPanel {
         private Image backgroundImage;
 

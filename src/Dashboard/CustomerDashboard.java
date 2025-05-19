@@ -748,7 +748,94 @@ public class CustomerDashboard extends JFrame {
             }
         }
     }
+    private void generatePaymentReceipt(Bill bill, String paymentMethod) {
+        try {
+             String fileName = "Payment_Receipt_" + bill.meterNumber + "_" +
+                    LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".pdf";
 
+             JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save Payment Receipt");
+            fileChooser.setSelectedFile(new File(fileName));
+
+            if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+                File file = fileChooser.getSelectedFile();
+
+                 Document document = new Document();
+                PdfWriter.getInstance(document, new FileOutputStream(file));
+                document.open();
+
+                 com.itextpdf.text.Font titleFont = FontFactory.getFont(HELVETICA_BOLD, 18, BaseColor.BLACK);
+                Paragraph title = new Paragraph("PAYMENT RECEIPT", titleFont);
+                title.setAlignment(Element.ALIGN_CENTER);
+                title.setSpacingAfter(20);
+                document.add(title);
+
+                 com.itextpdf.text.Font infoFont = FontFactory.getFont(HELVETICA, 12, BaseColor.BLACK);
+                Paragraph customerInfo = new Paragraph();
+                customerInfo.add(new Phrase("Customer: " + txtFirstName.getText() + " " + txtLastName.getText() + "\n", infoFont));
+                customerInfo.add(new Phrase("Address: " + txtDistrict.getText() + ", " + txtSector.getText() + "\n", infoFont));
+                customerInfo.add(new Phrase("Phone: " + txtPhone.getText() + "\n\n", infoFont));
+                document.add(customerInfo);
+
+                 PdfPTable table = new PdfPTable(2);
+                table.setWidthPercentage(100);
+                table.setSpacingBefore(10);
+                table.setSpacingAfter(10);
+
+                addTableHeader(table, "Payment Details", "Value");
+                addTableRow(table, "Meter Number", bill.meterNumber);
+                addTableRow(table, "Payment Date", LocalDate.now().toString());
+                addTableRow(table, "Payment Method", paymentMethod);
+                addTableRow(table, "Amount Paid", String.format("RWF%.2f", bill.amount));
+                addTableRow(table, "Bill Period", bill.billDate.toString());
+                addTableRow(table, "Units Consumed", String.format("%.2f", bill.units));
+
+                document.add(table);
+
+                 Paragraph thanks = new Paragraph("\nThank you for your payment!", infoFont);
+                thanks.setAlignment(Element.ALIGN_CENTER);
+                document.add(thanks);
+
+                document.close();
+
+                JOptionPane.showMessageDialog(this,
+                        "Payment receipt saved as:\n" + file.getAbsolutePath(),
+                        "Receipt Generated",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Error generating receipt: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void addTableHeader(PdfPTable table, String header1, String header2) {
+        com.itextpdf.text.Font headerFont = FontFactory.getFont(HELVETICA_BOLD, 12, BaseColor.WHITE);
+        PdfPCell cell;
+
+        cell = new PdfPCell(new Phrase(header1, headerFont));
+        cell.setBackgroundColor(new BaseColor(128, 0, 128));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(cell);
+
+        cell = new PdfPCell(new Phrase(header2, headerFont));
+        cell.setBackgroundColor(new BaseColor(128, 0, 128));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        table.addCell(cell);
+    }
+
+    private void addTableRow(PdfPTable table, String label, String value) {
+        com.itextpdf.text.Font font = FontFactory.getFont(HELVETICA, 12, BaseColor.BLACK);
+
+        PdfPCell labelCell = new PdfPCell(new Phrase(label, font));
+        labelCell.setBackgroundColor(new BaseColor(230, 204, 255));
+        table.addCell(labelCell);
+
+        PdfPCell valueCell = new PdfPCell(new Phrase(value, font));
+        table.addCell(valueCell);
+    }
     private void loadBills() {
         billsModel.setRowCount(0);
         customerBills.clear();
@@ -971,7 +1058,6 @@ public class CustomerDashboard extends JFrame {
 
         return false;
     }
-
     private void processPayment(Bill bill, String method) {
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(
@@ -987,6 +1073,8 @@ public class CustomerDashboard extends JFrame {
             String paymentMessage = String.format("Payment of RWF%.2f for meter %s via %s",
                     bill.amount, bill.meterNumber, method);
             addAlert("Payment", paymentMessage);
+
+             generatePaymentReceipt(bill, method);
 
             JOptionPane.showMessageDialog(this,
                     "Payment of " + String.format("RWF%.2f", bill.amount) +

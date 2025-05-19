@@ -15,15 +15,12 @@ public class WelcomeScreen extends JFrame {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
 
-        // Keep the logo/image
         ImageIcon imageIcon = new ImageIcon("src/assets/logo.png");
         JLabel imageLabel = new JLabel(imageIcon, JLabel.CENTER);
         panel.add(imageLabel, BorderLayout.CENTER);
 
-        // Panel for the buttons
         JPanel buttonPanel = new JPanel();
 
-        // Login Dropdown
         JButton loginBtn = new JButton("Log In");
         String[] loginOptions = {"Select Role", "Admin", "User"};
         JComboBox<String> loginDropdown = new JComboBox<>(loginOptions);
@@ -37,9 +34,9 @@ public class WelcomeScreen extends JFrame {
         loginBtn.addActionListener(e -> {
             String selectedRole = (String) loginDropdown.getSelectedItem();
             if (selectedRole.equals("Admin")) {
-                new AdminLoginForm().setVisible(true);  // Admin login form
+                new AdminLoginForm().setVisible(true);
             } else if (selectedRole.equals("User")) {
-                new CustomerLogin().setVisible(true);  // User login form
+                new CustomerLogin().setVisible(true);
             } else {
                 JOptionPane.showMessageDialog(this, "Please select a valid role.");
                 return;
@@ -47,7 +44,6 @@ public class WelcomeScreen extends JFrame {
             dispose();
         });
 
-        // Signup Dropdown
         JButton signupBtn = new JButton("Sign Up");
         String[] signupOptions = {"Select Role", "Admin", "User"};
         JComboBox<String> signupDropdown = new JComboBox<>(signupOptions);
@@ -61,9 +57,9 @@ public class WelcomeScreen extends JFrame {
         signupBtn.addActionListener(e -> {
             String selectedRole = (String) signupDropdown.getSelectedItem();
             if (selectedRole.equals("Admin")) {
-                new AdminSignupForm().setVisible(true);  // Admin signup form
+                new AdminSignupForm().setVisible(true);
             } else if (selectedRole.equals("User")) {
-                new CustomerSignupForm().setVisible(true);  // User signup form
+                new CustomerSignupForm().setVisible(true);
             } else {
                 JOptionPane.showMessageDialog(this, "Please select a valid role.");
                 return;

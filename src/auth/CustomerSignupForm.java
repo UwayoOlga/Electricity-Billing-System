@@ -19,13 +19,14 @@ public class CustomerSignupForm extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(null);
-
+        Color lightPurple = new Color(230, 204, 255);
+        getContentPane().setBackground(lightPurple);
         Color purple = new Color(128, 0, 128);
         Font labelFont = new Font("Arial", Font.BOLD, 14);
         Font fieldFont = new Font("Arial", Font.PLAIN, 13);
 
-        JButton backButton = new JButton("<");
-        backButton.setBounds(10, 10, 35, 35);
+        JButton backButton = new JButton("Back");
+        backButton.setBounds(10, 10, 45, 35);
         backButton.setBackground(purple);
         backButton.setForeground(Color.WHITE);
         backButton.setFont(new Font("Arial", Font.BOLD, 14));
