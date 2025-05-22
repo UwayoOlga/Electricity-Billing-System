@@ -589,7 +589,7 @@ public class AdminDashboard extends JFrame {
                                 do {
                                     billTable.addCell(new Phrase(billRs.getDate("bill_date").toString(), dataFont));
                                     billTable.addCell(new Phrase(String.format("%.2f", billRs.getDouble("unit")), dataFont));
-                                    billTable.addCell(new Phrase(String.format("$%.2f", billRs.getDouble("amount")), dataFont));
+                                    billTable.addCell(new Phrase(String.format("RWF%.2f", billRs.getDouble("amount")), dataFont));
 
                                     String status = billRs.getString("payment_status");
                                     Phrase statusPhrase = new Phrase(status, dataFont);
@@ -746,7 +746,7 @@ public class AdminDashboard extends JFrame {
                         billsTable.addCell(rs.getDate("bill_date").toString());
                         billsTable.addCell(rs.getString("meter_number"));
                         billsTable.addCell(String.format("%.2f", rs.getDouble("unit")));
-                        billsTable.addCell(String.format("$%.2f", rs.getDouble("amount")));
+                        billsTable.addCell(String.format("RWF%.2f", rs.getDouble("amount")));
                         billsTable.addCell(rs.getString("payment_status"));
                     }
                 }

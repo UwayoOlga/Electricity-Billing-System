@@ -78,7 +78,6 @@ public class CustomerSignupForm extends JFrame {
         districtLabel.setForeground(purple);
         districtLabel.setBounds(xLabel, 220, 100, height);
 
-        // Create a combo box with the allowed districts
         String[] districts = {"gasabo", "kicukiro", "nyarugenge"};
         districtComboBox = new JComboBox<>(districts);
         districtComboBox.setFont(fieldFont);

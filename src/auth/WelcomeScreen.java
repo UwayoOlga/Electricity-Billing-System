@@ -22,7 +22,7 @@ public class WelcomeScreen extends JFrame {
         JPanel buttonPanel = new JPanel();
 
         JButton loginBtn = new JButton("Log In");
-        String[] loginOptions = {"Select Role", "Admin", "User"};
+        String[] loginOptions = {"Select Role", "Admin", "Client"};
         JComboBox<String> loginDropdown = new JComboBox<>(loginOptions);
         loginDropdown.setFont(new Font("Arial", Font.BOLD, 14));
         loginBtn.setBackground(new Color(128, 0, 128));
@@ -35,7 +35,7 @@ public class WelcomeScreen extends JFrame {
             String selectedRole = (String) loginDropdown.getSelectedItem();
             if (selectedRole.equals("Admin")) {
                 new AdminLoginForm().setVisible(true);
-            } else if (selectedRole.equals("User")) {
+            } else if (selectedRole.equals("Client")) {
                 new CustomerLogin().setVisible(true);
             } else {
                 JOptionPane.showMessageDialog(this, "Please select a valid role.");
@@ -45,7 +45,7 @@ public class WelcomeScreen extends JFrame {
         });
 
         JButton signupBtn = new JButton("Sign Up");
-        String[] signupOptions = {"Select Role", "Admin", "User"};
+        String[] signupOptions = {"Select Role", "Admin", "Client"};
         JComboBox<String> signupDropdown = new JComboBox<>(signupOptions);
         signupDropdown.setFont(new Font("Arial", Font.BOLD, 14));
         signupBtn.setBackground(new Color(128, 0, 128));
@@ -58,7 +58,7 @@ public class WelcomeScreen extends JFrame {
             String selectedRole = (String) signupDropdown.getSelectedItem();
             if (selectedRole.equals("Admin")) {
                 new AdminSignupForm().setVisible(true);
-            } else if (selectedRole.equals("User")) {
+            } else if (selectedRole.equals("Client")) {
                 new CustomerSignupForm().setVisible(true);
             } else {
                 JOptionPane.showMessageDialog(this, "Please select a valid role.");

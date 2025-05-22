@@ -74,6 +74,7 @@ public class CustomerDashboard extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
         JPanel accountPanel = createAccountSummaryPanel(purple, white);
         tabbedPane.addTab("Account Summary", accountPanel);
+
         JPanel metersPanel = createMetersPanel(purple, white, lightPurple);
         tabbedPane.addTab("Meters", metersPanel);
         JPanel billingPanel = createBillingPanel(purple, white, lightPurple);
@@ -83,7 +84,7 @@ public class CustomerDashboard extends JFrame {
         JPanel usagePanel = createUsagePanel(white, lightPurple);
         tabbedPane.addTab("Usage History", usagePanel);
         JPanel alertsPanel = createAlertsPanel(white, lightPurple);
-        tabbedPane.addTab("Alerts", alertsPanel);
+        tabbedPane.addTab("Notifications", alertsPanel);
 
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(white);
@@ -122,7 +123,10 @@ public class CustomerDashboard extends JFrame {
 
     private JPanel createAccountSummaryPanel(Color purple, Color bg) {
         JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(bg);
+        Color lightPurple = new Color(230, 204, 255);
+
+        panel.setBackground(lightPurple);
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
